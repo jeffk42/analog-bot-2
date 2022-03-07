@@ -1,0 +1,365 @@
+{
+  "version" : "2.0a",
+  "outfile_name" : "WeeklyStats_%s-%s.txt",
+  "weekly_aa_name" : "Weekly 'Ask Anything About Analog Photography' - Week %s",
+  "subreddit_data" : {
+    "1_last_week_subscribers": {
+      "type" : "count",
+      "query_1": {
+        "query": "select subcount from subscribers where utc between %s and %s and subreddit = 'analog' order by utc limit 1;",
+        "query_vars": "start_date|end_date",
+        "store_result": "starting_subscribers"
+      },
+      "output_str": "New Subscribers This Week: **%s**\n  * Percent Change: **%s**",
+      "output_vars": "subtract('subscribers','starting_subscribers')|perc(subtract('subscribers','starting_subscribers'),'subscribers')"
+    },
+    "2_ytd_subscribers": {
+      "type" : "count",
+      "query_1": {
+        "query": "select subcount from subscribers where utc between %s and %s and subreddit = 'analog' order by utc limit 1;",
+        "query_vars": "first_week_start_date|start_date",
+        "store_result": "ytd_starting_subscribers"
+      },
+      "output_str": "New Subscribers YTD: **%s**\n  * Percent Change: **%s**",
+      "output_vars": "subtract('subscribers','ytd_starting_subscribers')|perc(subtract('subscribers','ytd_starting_subscribers'),'subscribers')"
+    },
+    "3_ask_anything" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "select id from posts where created_utc BETWEEN %s AND %s and title like 'Weekly ''Ask Anything About %' and subreddit = 'analog' limit 1;",
+        "query_vars" : "start_date|end_date",
+        "store_result" : "weekly_aa_id"
+      }
+    },
+    "4_total_posts_alltime" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "SELECT COUNT(*) FROM posts WHERE created_utc BETWEEN %s AND %s and subreddit = 'analog';",
+        "query_vars" : "subreddit_created|end_date",
+        "store_result" : "alltime_post_count"
+      },
+      "output_str" : "Total Posts Since Subreddit Creation: **%s**",
+      "output_vars" : "alltime_post_count"
+    }
+  },
+  "prelim_stats_data" : {
+    "1_total_post": {
+      "type" : "count",
+      "query_1": {
+        "query": "select COUNT(*) from posts where created_utc between %s and %s and subreddit = 'analog'",
+        "query_vars": "start_date|end_date",
+        "store_result": "total_post_count"
+      },
+      "output_str": "Total New Posts This Week: **%s**",
+      "output_vars": "total_post_count"
+    }
+  },
+  "sum_stats_data" : {
+    "1_link_post" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "select COUNT(*) from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'link';",
+        "query_vars" : "start_date|end_date",
+        "store_result" : "link_post_count"
+      },
+
+      "output_str" : "Image Posts This Week: **%s** _(%s of total posts)_",
+      "output_vars" : "link_post_count|perc('link_post_count','total_post_count')"
+    },
+    "2_text_post" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "select COUNT(*) from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'selfpost';",
+        "query_vars" : "start_date|end_date",
+        "store_result" : "text_post_count"
+      },
+
+      "output_str" : "Text Posts This Week: **%s** _(%s of total posts)_",
+      "output_vars" : "text_post_count|perc('text_post_count','total_post_count')"
+    },
+    "3_ac_post" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "select COUNT(*) from posts where created_utc between %s and %s and subreddit = 'AnalogCommunity';",
+        "store_result" : "ac_post_count"
+      },
+
+      "output_str" : "Total New Posts in /r/AnalogCommunity this week: **%s** _^(* not included in other stats unless stated)_",
+      "output_vars" : "ac_post_count"
+    },
+    "4_aa_top_comments" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "select COUNT(*) from comments where parent_id like 't3_%' and submission = %s;",
+        "query_vars" : "weekly_aa_id",
+        "store_result" : "aa_top_comments"
+      },
+      "query_2" : {
+        "query" : "select num_comments from post_stats where post_id = %s;",
+        "query_vars" : "weekly_aa_id",
+        "store_result" : "aa_num_comments"
+      },
+      "output_str" : "Top-level Questions in 'Ask Anything' This Week: **%s** _(%s total comments)_",
+      "output_vars" : "aa_top_comments|aa_num_comments"
+    }
+  },
+  "vote_comment_data" : {
+    "1_total_upvotes" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "select SUM(post_stats.score) from post_stats, posts where post_stats.post_id = posts.id and posts.created_utc between %s and %s and posts.subreddit = 'analog'",
+        "store_result" : "total_upvote_count"
+      },
+      "output_str" : "Total Submission Upvotes Earned: **%s**",
+      "output_vars" : "total_upvote_count"
+    },
+    "2_average_upvotes" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "select AVG(post_stats.score) from post_stats, posts where post_stats.post_id = posts.id and posts.created_utc between %s and %s and posts.subreddit = 'analog'",
+        "store_result" : "average_upvote_count"
+      },
+      "query_2" : {
+        "query" : "select COUNT(post_stats.post_id) from post_stats,posts where post_stats.post_id = posts.id and posts.created_utc between %s and %s and post_stats.score > %s and posts.subreddit = 'analog'",
+        "query_vars" : "start_date|end_date|average_upvote_count",
+        "store_result" : "beat_upvote_count"
+      },
+
+      "output_str" : "Average Upvotes Per Post: **%s** _(%s of posts beat the average)_",
+      "output_vars" : "average_upvote_count|perc('beat_upvote_count','total_post_count')"
+    },
+    "3_average_upvote_ratio" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "SELECT AVG(post_stats.upvote_ratio) FROM post_stats, posts WHERE post_stats.upvote_ratio IS NOT NULL AND post_stats.post_id = posts.id AND posts.created_utc BETWEEN %s AND %s AND posts.subreddit = 'analog'",
+        "store_result" : "average_upvote_ratio"
+      },
+
+      "output_str" : "Average Upvote Ratio Per Post: **%s**",
+      "output_vars" : "perc('average_upvote_ratio')"
+    },
+    "4_total_comments" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "select SUM(post_stats.num_comments) from post_stats, posts where post_stats.post_id = posts.id and posts.created_utc between %s and %s and posts.subreddit = 'analog'",
+        "store_result" : "total_comment_count"
+      },
+
+      "output_str" : "Total Comments Made On Posts: **%s**",
+      "output_vars" : "total_comment_count"
+    },
+    "5_average_comments" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "SELECT AVG(post_stats.num_comments) from post_stats, posts where post_stats.post_id = posts.id and posts.created_utc between %s and %s AND IFNULL(post_stats.link_flair_text != 'Community', TRUE) AND posts.subreddit = 'analog'",
+        "store_result" : "average_comment_count"
+      },
+      "query_2" : {
+        "query" : "select COUNT(post_stats.post_id) from post_stats,posts where post_stats.post_id = posts.id and posts.created_utc between %s and %s and post_stats.num_comments > %s AND IFNULL(post_stats.link_flair_text != 'Community', TRUE) and posts.subreddit = 'analog'",
+        "query_vars" : "start_date|end_date|average_comment_count",
+        "store_result" : "beat_comment_count"
+      },
+      "output_str" : "Average Comments Per Post: **%s** _(%s of posts beat the average)_",
+      "output_vars" : "average_comment_count|perc('beat_comment_count','total_post_count')"
+    },
+    "6_num_commenters" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "SELECT COUNT(DISTINCT(comments.author)) from comments, posts where comments.submission = posts.id and comments.created_utc between %s and %s and posts.subreddit = 'analog'",
+        "store_result" : "num_commenters"
+      },
+      "output_str" : "Number of distinct commenters this week: **%s**",
+      "output_vars" : "num_commenters"
+    },
+    "7_total_comment_upvotes" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "select SUM(comments.score) from comments, posts where comments.submission = posts.id and comments.created_utc between %s and %s and posts.subreddit = 'analog'",
+        "store_result" : "total_comment_upvotes"
+      },
+      "output_str" : "Total Upvotes on Comments: **%s**",
+      "output_vars" : "total_comment_upvotes"
+    },
+    "8_average_comment_upvotes" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "select AVG(comments.score) from comments, posts where comments.submission = posts.id and comments.created_utc between %s and %s and posts.subreddit = 'analog'",
+        "store_result" : "average_comment_upvotes"
+      },
+      "output_str" : "Average Upvotes Per Comment: **%s**",
+      "output_vars" : "average_comment_upvotes"
+    }
+  },
+  "user_stats_data" : {
+    "1_most_active_poster" : {
+      "type" : "post",
+      "query_1" : {
+        "query" : "SELECT author, COUNT(author) as numposts from posts where created_utc between %s and %s and subreddit = 'analog' GROUP BY author ORDER BY numposts DESC LIMIT 1;",
+        "store_result" : "most_active_poster"
+      },
+      "output_str" : "Most active poster: /u/%s _(%s submissions)_",
+      "output_vars" : "most_active_poster.0|most_active_poster.1"
+    },
+    "2_most_active_commenter" : {
+      "type" : "post",
+      "query_1" : {
+        "query" : "SELECT comments.author, COUNT(comments.author) as numcomm from comments, posts where comments.submission = posts.id and comments.created_utc between %s and %s and posts.subreddit = 'analog' GROUP BY comments.author ORDER BY numcomm DESC LIMIT 1;",
+        "store_result" : "most_active_commenter"
+      },
+      "output_str" : "Most active commenter: /u/%s _(%s comments)_",
+      "output_vars" : "most_active_commenter.0|most_active_commenter.1"
+    },
+    "3_most_upvoted_post" : {
+      "type" : "post",
+      "query_1" : {
+        "query" : "SELECT posts.title, posts.shortlink, post_stats.score from posts, post_stats where post_stats.post_id = posts.id and posts.created_utc between %s and %s and posts.subreddit = 'analog' AND IFNULL(post_stats.link_flair_text != 'Community', TRUE) ORDER BY post_stats.score DESC LIMIT 1;",
+        "store_result" : "most_upvoted_post"
+      },
+      "output_str" : "Most upvoted submission: [%s](%s) _(%s upvotes)_",
+      "output_vars" : "most_upvoted_post.0|most_upvoted_post.1|most_upvoted_post.2"
+    },
+    "4_most_commented_post" : {
+      "type" : "post",
+      "query_1" : {
+        "query" : "SELECT posts.title, posts.shortlink, post_stats.num_comments from posts, post_stats where post_stats.post_id = posts.id and posts.created_utc between %s and %s and posts.subreddit = 'analog' AND IFNULL(post_stats.link_flair_text != 'Community', TRUE) ORDER BY post_stats.num_comments DESC LIMIT 1;",
+        "store_result" : "most_commented_post"
+      },
+      "output_str" : "Most commented submission: [%s](%s) _(%s comments)_",
+      "output_vars" : "most_commented_post.0|most_commented_post.1|most_commented_post.2"
+    }
+  },
+  "photo_film_stats_data" : {
+    "1_portra_photos": {
+      "type" : "count",
+      "query_1" : {
+        "query": "select SUM(title REGEXP '.*[Pp][Oo][Rr][Tt][Rr][Aa][^iI].*') from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'link';",
+        "store_result" : "portra_count"
+      },
+
+      "output_str": "Photos taken on Portra film: **%s**  _(%s of total photos)_",
+      "output_vars" : "portra_count|perc('portra_count','link_post_count')"
+    },
+    "2_ektar_photos": {
+      "type" : "count",
+      "query_1" : {
+        "query": "select SUM(title REGEXP '.*[Ee][Kk][Tt][Aa][Rr].*') from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'link';",
+        "store_result" : "ektar_count"
+      },
+
+      "output_str": "Photos taken on Ektar film: **%s**  _(%s of total photos)_",
+      "output_vars" : "ektar_count|perc('ektar_count','link_post_count')"
+    },
+    "3_tmax_photos": {
+      "type" : "count",
+      "query_1" : {
+        "query": "select SUM(title REGEXP '.*[Tt]-?[Mm][Aa][Xx].*') from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'link';",
+        "store_result" : "tmax_count"
+      },
+
+      "output_str": "Photos taken on T-Max film: **%s**  _(%s of total photos)_",
+      "output_vars": "tmax_count|perc('tmax_count','link_post_count')"
+    },
+    "4_ilford_photos": {
+      "type" : "count",
+      "query_1" : {
+        "query": "select SUM(title REGEXP '.*([Dd][Ee][Ll][Tt][Aa]|[Hh][Pp]-?5|[Ff][Pp]-?4|[Ii][Ll][Ff][Oo][Rr][Dd]|[Pp][Aa][Nn][ -]?[Ff]).*') from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'link';",
+        "store_result" : "ilford_count"
+      },
+
+      "output_str": "Photos taken on any Ilford film: **%s** _(%s of total photos)_",
+      "output_vars": "ilford_count|perc('ilford_count','link_post_count')"
+    },
+    "5_cinestill_photos": {
+      "type" : "count",
+      "query_1" : {
+        "query": "select SUM(title REGEXP '.*([Cc][Ii][Nn][Ee][Ss][Tt][Ii][Ll][Ll]).*') from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'link';",
+        "store_result" : "cinestill_count"
+      },
+
+      "output_str": "Photos taken on any Cinestill film: **%s** _(%s of total photos)_",
+      "output_vars": "cinestill_count|perc('cinestill_count','link_post_count')"
+    }
+  },
+  "photo_camera_stats_data" : {
+    "1_ae1_photos": {
+      "type" : "count",
+      "query_1" : {
+        "query": "select SUM(title REGEXP '.*[Aa][Ee]-?1.*') from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'link';",
+        "store_result" : "ae1_count"
+      },
+
+      "output_str": "Photos taken with a Canon AE-1: **%s** _(%s of total photos)_",
+      "output_vars": "ae1_count|perc('ae1_count','link_post_count')"
+    },
+    "2_olympus_photos": {
+      "type" : "count",
+      "query_1" : {
+        "query": "select SUM(title REGEXP '.*[Oo][Mm]-?([Pp][Cc]|10?|20?|30?|40?|Gg|2000).*') from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'link';",
+        "store_result" : "olympus_om_count"
+      },
+
+      "output_str": "Photos taken with any Olympus OM camera: **%s** _(%s of total photos)_",
+      "output_vars": "olympus_om_count|perc('olympus_om_count','link_post_count')"
+    },
+    "3_leica_photos": {
+      "type" : "count",
+      "query_1" : {
+        "query": "select SUM(title REGEXP '.*[Ll][Ee][Ii][Cc][Aa].*') from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'link';",
+        "store_result" : "leica_count"
+      },
+
+      "output_str": "Photos taken with any Leica camera: **%s** _(%s of total photos)_",
+      "output_vars": "leica_count|perc('leica_count','link_post_count')"
+    },
+    "4_linhof_photos": {
+      "type" : "count",
+      "query_1" : {
+        "query": "select SUM(title REGEXP '.*[Ll][Ii][Nn][Hh][Oo][Ff].*') from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'link';",
+        "store_result" : "linhof_count"
+      },
+
+      "output_str": "Photos taken with a Linhof camera: **%s** _(%s of total photos)_",
+      "output_vars": "linhof_count|perc('linhof_count','link_post_count')"
+    }
+  },
+  "random_stats" : {
+    "1_nsfw_post": {
+      "type" : "count",
+      "query_1": {
+        "query": "select COUNT(*) from posts, post_stats where post_stats.post_id = posts.id and posts.created_utc between %s and %s and posts.subreddit = 'analog' and post_stats.over_18 = TRUE",
+        "query_vars": "start_date|end_date",
+        "store_result": "nsfw_post_count"
+      },
+      "output_str": "Total NSFW Posts This Week: **%s** _(%s of total posts)_",
+      "output_vars": "nsfw_post_count|perc('nsfw_post_count','total_post_count')"
+    },
+    "2_ae1_and_portra" : {
+      "type" : "count",
+      "query_1" : {
+        "query" : "select SUM(title REGEXP '.*[Aa][Ee]-?1.*') from posts where created_utc between %s and %s and subreddit = 'analog' and type = 'link' and id in (select id from posts where subreddit = 'analog' and type = 'link' and (title REGEXP '.*[Pp][Oo][Rr][Tt][Rr][Aa][^iI].*'));",
+        "store_result" : "ae1_portra_count"
+      },
+      "output_str" : "Photos taken on Portra with a Canon AE-1: **%s** _(%s of total photos)_",
+      "output_vars" : "ae1_portra_count|perc('ae1_portra_count','link_post_count')"
+    },
+    "3_first_post" : {
+      "type" : "post",
+      "query_1" : {
+        "query" : "select title, shortlink, created_utc from posts where created_utc between %s and %s order by created_utc limit 1;",
+        "store_result" : "first_post"
+      },
+      "output_str" : "First post of the week: [%s](%s) _^(%s)_",
+      "output_vars" : "first_post.0|first_post.1|first_post.2"
+    },
+    "4_last_post" : {
+      "type" : "post",
+      "query_1" : {
+        "query" : "select title, shortlink, created_utc from posts where created_utc between %s and %s order by created_utc desc limit 1;",
+        "store_result" : "last_post"
+      },
+      "output_str" : "Last post of the week: [%s](%s) _^(%s)_",
+      "output_vars" : "last_post.0|last_post.1|last_post.2"
+    }
+  }
+
+}

@@ -1,0 +1,4 @@
+{
+  "subreddits" : ["analog", "AnalogCommunity"],
+  "log_path" : "./log/"
+}

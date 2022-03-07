@@ -1,0 +1,4 @@
+{
+  "props_path" : "./properties/",
+  "credentials_file" : "credentials.json"
+}
